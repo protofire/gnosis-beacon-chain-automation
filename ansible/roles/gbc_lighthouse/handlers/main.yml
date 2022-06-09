@@ -1,0 +1,12 @@
+---
+# handlers file for gbc_lighthouse
+- name: Restart services
+  ansible.builtin.set_fact:
+    restart_services: true
+
+- name: Import validator keys
+  become: true
+  docker_compose:
+    project_src: "{{ gbc_lighthouse_dir }}"
+    services: validator-import
+    state: present

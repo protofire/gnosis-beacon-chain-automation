@@ -1,0 +1,9 @@
+---
+all:
+  children:
+    gbc_nodes:
+      hosts:
+    gbc_validators:
+      hosts:
+    gc_nodes:
+      hosts:

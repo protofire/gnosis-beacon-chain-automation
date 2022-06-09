@@ -1,0 +1,12 @@
+---
+# tasks file for gc_node
+- name: Setup GBC Lighthouse client
+  become: true
+  block:
+    - name: Install prerequisites
+      import_tasks: prerequisites.yml
+      tags: prerequisites
+
+    - name: GC Node deploy
+      import_tasks: gc_node.yml
+      tags: gc_node_deploy

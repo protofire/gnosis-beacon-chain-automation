@@ -1,0 +1,30 @@
+---
+- name: Get the latest version of docker-compose
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/docker/compose/releases/latest
+    body_format: json
+  register: page
+  when:
+    - docker_compose_version == 'latest'
+    - docker_package_state != 'absent'
+
+- name: Download docker-compose
+  vars:
+    docker_compose_url:
+      - https://github.com/docker/compose/releases/download/
+      - "{{ page.json.tag_name | default(docker_compose_version) }}"
+      - /docker-compose-{{ ansible_system }}-{{ ansible_machine }}
+  ansible.builtin.get_url:
+    url: "{{ docker_compose_url | join('') }}"
+    dest: "{{ docker_compose_path }}"
+    mode: "u+x,g+x,o+x"
+    force: true
+  when:
+    - docker_package_state != 'absent'
+    - not ansible_check_mode
+
+- name: Remove Docker-compose  # noqa risky-file-permissions
+  ansible.builtin.file:
+    path: "{{ docker_compose_path }}"
+    state: "{{ docker_package_state }}"
+  when: docker_package_state == 'absent'

@@ -1,0 +1,25 @@
+---
+- name: Install docker [Amazon]
+  block:
+    - name: Install docker [Amazon]
+      ansible.builtin.yum: &docker_install
+        name: docker
+        state: "{{ docker_package_state }}"
+      register: docker_amazon
+      notify: Restart Docker
+  rescue:
+    - name: Enable Docker extras [Amazon]
+      ansible.builtin.command: "amazon-linux-extras enable docker=latest"
+      when: docker_amazon.rc == 126
+
+    - name: Clean yum metadata cache [Amazon]
+      ansible.builtin.command: "yum clean metadata"
+      args:
+        warn: false
+      when: docker_amazon.rc == 126
+
+    - name: Install docker [Amazon]
+      ansible.builtin.yum:
+        <<: *docker_install
+        update_cache: true
+      notify: Restart Docker

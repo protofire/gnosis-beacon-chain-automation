@@ -1,0 +1,152 @@
+---
+- name: Create a directory for GBC Lighthouse
+  ansible.builtin.file:
+    path: "{{ gbc_lighthouse_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Setup GBC Lighthouse
+  block:
+    - name: Download lighthouse-launcher  # noqa git-latest
+      ansible.builtin.git:
+        repo: "{{ gbc_lighthouse_repo }}"
+        version: "{{ gbc_lighthouse_repo_branch }}"
+        dest: "{{ gbc_lighthouse_dir }}"
+        update: "{{ update_lighthouse }}"
+        force: "{{ update_lighthouse }}"
+
+    - name: Copy validator keys (Validator)
+      ansible.builtin.copy:
+        src: "{{ inventory_dir }}/validator_keys/{{ validator_keys_dir }}/"
+        dest: "{{ gbc_lighthouse_dir }}/keys/validator_keys"
+        decrypt: true
+        mode: 0755
+      when: group_names|select('regex','gbc_validators')
+
+    - name: Copy validators keys (Node)
+      block:
+        - name: Get lisf of all keys
+          become: false
+          ansible.builtin.find:
+            paths: "{{ inventory_dir }}/validator_keys/"
+            patterns: "keystore*.json"
+            recurse: true
+          no_log: true
+          delegate_to: localhost
+          register: all_validator_keys_files
+
+        - name: Copy keys to Node
+          ansible.builtin.copy:
+            src: "{{ item.path }}"
+            dest: "{{ gbc_lighthouse_dir }}/keys/validator_keys/{{
+              item.path | basename }}"
+            decrypt: true
+            mode: 0755
+          no_log: true
+          loop: "{{ all_validator_keys_files.files }}"
+      when: group_names|select('regex','gbc_nodes')
+
+    - name: Write keystore password
+      ansible.builtin.copy:
+        content: "{{ keystore_password }}"
+        dest: "{{ gbc_lighthouse_dir }}/keys/keystore_password.txt"
+        mode: 0644
+      when: group_names|select('regex','gbc_validators')
+
+    - name: Check .env config
+      ansible.builtin.stat:
+        path: "{{ gbc_lighthouse_dir }}/.env"
+      register: envfile
+
+    - name: Create .env config
+      ansible.builtin.copy:
+        src: "{{ gbc_lighthouse_dir }}/.env.example"
+        dest: "{{ gbc_lighthouse_dir }}/.env"
+        remote_src: true
+        mode: 0644
+      when: not envfile.stat.exists
+
+    - name: Set XDAI_RPC_URL
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/.env"
+        regexp: '^(\s*XDAI_RPC_URL=).*'
+        replace: '\g<1>{{ xdai_rpc_url }}'
+
+    - name: Set PUBLIC_IP
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/.env"
+        regexp: '^(\s*PUBLIC_IP=).*'
+        replace: '\g<1>{{ public_ip }}'
+
+    - name: Set TARGET_PEERS
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/.env"
+        regexp: '^(\s*TARGET_PEERS=).*'
+        replace: '\g<1>{{ target_peers if target_peers else 80 }}'
+
+    - name: Set Graffitiwall
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/config/graffiti.yml"
+        regexp: '^(\s*default: ).*'
+        replace: '\g<1>{{ graffitiwall }}'
+      when: graffitiwall
+
+    - block:
+        - name: Check NODE_URL presence
+          ansible.builtin.command:
+            cmd: "grep 'NODE_URL' {{ gbc_lighthouse_dir }}/.env"
+          register: node_url_presence
+          changed_when: node_url_presence.rc == 1
+          failed_when: node_url_presence is changed
+
+        - name: Set NODE_URL
+          ansible.builtin.replace:
+            path: "{{ gbc_lighthouse_dir }}/.env"
+            regexp: '^(\s*NODE_URL=).*'
+            replace: '\g<1>{{ node_url }}'
+      rescue:
+        - name: Add NODE_URL env variable to .env
+          ansible.builtin.lineinfile:
+            path: "{{ gbc_lighthouse_dir }}/.env"
+            line: "NODE_URL={{ node_url }}"
+            insertbefore: EOF
+      when:
+        - not group_names|select('regex','gbc_nodes')
+        - group_names|select('regex','gbc_validators')
+
+    - name: Add 5052 port expose for node in docker-compose.yml
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: '{{ item }}'
+        before: 'logging:'
+        regexp: '(\s*ports:)$'
+        replace: '\g<1> #\n      - "5052:5052"'
+      when: group_names|select('regex','gbc_nodes')
+      loop:
+        - "node:"
+        - "node-private-slasher:"
+        - "node-public-slasher:"
+
+    - name: Replace node IP to env variable NODE_URL in docker-compose.yml
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        regexp: "http://node:5052"
+        replace: "$NODE_URL"
+      when:
+        - not group_names|select('regex','gbc_nodes')
+        - group_names|select('regex','gbc_validators')
+
+    - name: Remove node dependency for validator
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: 'validator:'
+        before: 'logging:'
+        regexp: '^(\s*{{ item }}).*'
+        replace: '# \g<1>'
+      when:
+        - not group_names|select('regex','gbc_nodes')
+        - group_names|select('regex','gbc_validators')
+      loop:
+        - "- node"
+        - "depends_on"
+  notify: Restart services

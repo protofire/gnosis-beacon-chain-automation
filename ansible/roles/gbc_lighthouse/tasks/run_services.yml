@@ -1,0 +1,38 @@
+---
+- name: Run services
+  vars:
+    node_slasher_service: >-
+      {{ 'node-private-slasher'
+      if node_slasher_type == 'private'
+      else 'node-public-slasher' }}
+    node_service: >-
+      {{ 'node' if not node_slasher_enabled else node_slasher_service }}
+    restart_service: >-
+      {{ 'true' if restart_services|default(false) else 'false' }}
+  block:
+    - name: Debug
+      ansible.builtin.debug:
+        var: restart_service
+
+    - name: Change depends_on if node_slasher_enabled
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        regexp: "- node"
+        replace: "- {{ node_service }}"
+      when: node_slasher_enabled and "gbc_node" in group_names
+
+    - name: Run node
+      docker_compose:
+        project_src: "{{ gbc_lighthouse_dir }}"
+        services: "{{ node_service }}"
+        restarted: "{{ restart_service }}"
+        state: present
+      when: group_names|select('regex','gbc_nodes')
+
+    - name: Run validator
+      docker_compose:
+        project_src: "{{ gbc_lighthouse_dir }}"
+        services: validator
+        restarted: "{{ restart_service }}"
+        state: present
+      when: group_names|select('regex','gbc_validators')

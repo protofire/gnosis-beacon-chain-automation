@@ -1,0 +1,49 @@
+---
+- name: Keystore collision detection
+  become: false
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Get list of all validator keys files
+      ansible.builtin.find:
+        paths: "{{ inventory_dir }}/validator_keys"
+        patterns: "keystore*.json"
+        recurse: true
+      no_log: true
+      register: all_validator_keys
+
+    - name: Get list of validator keys files path
+      ansible.builtin.set_fact:
+        all_validator_keys_path: "{{ all_validator_keys_path | default([]) +
+            [item.path]
+          }}"
+      no_log: true
+      loop: "{{ all_validator_keys.files }}"
+
+    - name: Get list of validator keys files path
+      ansible.builtin.set_fact:
+        all_validator_keys_hash: "{{ all_validator_keys_hash | default([]) +
+            [lookup('unvault', '{{ item }}') | hash('sha256')]
+          }}"
+      no_log: true
+      loop: "{{ all_validator_keys_path }}"
+
+    - name: Create list of hashes of validator keys
+      ansible.builtin.set_fact:
+        all_validators: "{{ all_validators | default([]) +
+          [{'hash': lookup('unvault', '{{ item }}') | hash('sha256'),
+            'path': item,
+            'freq': all_validator_keys_hash|select('regex',myregex)|list|length
+          }] }}"
+      no_log: true
+      loop: "{{ all_validator_keys_path|unique|sort }}"
+      vars:
+        myregex: "^{{ lookup('unvault', '{{ item }}') | hash('sha256') }}"
+
+    - name: Check key collision
+      ansible.builtin.assert:
+        that: >
+          all_validators|json_query('[?freq > `1`].path') | count
+          <= 0
+        fail_msg: "Collision detected:
+          {{ all_validators|json_query('[?freq > `1`].path') }}"

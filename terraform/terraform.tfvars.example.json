@@ -1,0 +1,172 @@
+{
+  "clouds": {
+    "aws": {
+      "aws1": {
+        "project": "gnosis-validators",
+        "region": "eu-central-1",
+        "route53_region": "eu-central-1",
+        "vpc_cidr_range": "10.0.0.0/16",
+        "cidr_range": "10.0.0.0/24",
+        "gc_node": {
+          "count": 1,
+          "zones": ["a"]
+        },
+        "gbc_node": {
+          "count": 1,
+          "zones": ["b"]
+        },
+        "gbc_validator": {
+          "count": 2,
+          "zones": ["c", "b"]
+        }
+      }
+    },
+    "azure": {
+      "azure1": {
+        "project": "Gnosis_validator",
+        "region": "Central India",
+        "route53_region": "ap-south-1",
+        "vpc_cidr_range": "10.0.0.0/16",
+        "cidr_range": "10.0.0.0/24",
+        "gc_node": {
+          "count": 1,
+          "zones": ["1"]
+        },
+        "gbc_node": {
+          "count": 1,
+          "zones": ["2"]
+        },
+        "gbc_validator": {
+          "count": 2,
+          "zones": ["3", "2"]
+        }
+      }
+    },
+    "gcp": {
+      "gcp1": {
+        "project": "gnosis-validators",
+        "region": "us-central1",
+        "route53_region": "us-east-1",
+        "vpc_cidr_range": "10.0.0.0/16",
+        "cidr_range": "10.0.0.0/24",
+        "gc_node": {
+          "count": 1,
+          "zones": ["a"]
+        },
+        "gbc_node": {
+          "count": 1,
+          "zones": ["b"]
+        },
+        "gbc_validator": {
+          "count": 2,
+          "zones": ["c", "a"]
+        }
+      }
+    }
+  },
+  "vm_config": {
+    "gc_node": {
+      "general": {
+        "vm_name": "gc-node",
+        "root_disk_size": 10,
+        "disk_size": 100,
+        "health_check_path": "/health",
+        "health_check_type": "HTTP",
+        "ports": {
+          "p2p": [ "30303" ],
+          "rpc": [ "8545" ],
+          "ws": [ "8546" ]
+        },
+        "target_tags": [
+          "gc-node"
+        ]
+      },
+      "provider_specific": {
+        "aws": {
+          "vm_type": "t3a.large",
+          "iops": "3000",
+          "throughput": "125"
+        },
+        "azure": {
+          "vm_type": "Standard_D2as_v4"
+        },
+        "gcp": {
+          "vm_type": "e2-standard-2"
+        }
+      }
+    },
+    "gbc_node": {
+      "general": {
+        "vm_name": "gbc-node",
+        "root_disk_size": 10,
+        "disk_size": 60,
+        "health_check_path": "/lighthouse/health",
+        "health_check_type": "HTTP",
+        "ports": {
+          "p2p": [ "9000" ],
+          "rpc": [ "5052" ],
+          "ws": [ "5052" ]
+        },
+        "target_tags": [
+          "gbc-node"
+        ]
+      },
+      "provider_specific": {
+        "aws": {
+          "vm_type": "c5a.xlarge",
+          "iops": "3000",
+          "throughput": "125"
+        },
+        "azure": {
+          "vm_type": "Standard_D4as_v4"
+        },
+        "gcp": {
+          "vm_type": "e2-highcpu-4"
+        }
+      }
+    },
+    "gbc_validator": {
+      "general": {
+        "vm_name": "gbc-validator",
+        "root_disk_size": 10,
+        "disk_size": 10,
+        "health_check_path": "/lighthouse/health",
+        "health_check_type": "HTTP",
+        "ports": {
+          "p2p": [ "9000" ],
+          "rpc": [ "5052" ],
+          "ws": [ "5052" ]
+        },
+        "target_tags": [
+          "gbc-validator"
+        ]
+      },
+      "provider_specific": {
+        "aws": {
+          "vm_type": "t3a.micro",
+          "iops": "3000",
+          "throughput": "125"
+        },
+        "azure": {
+          "vm_type": "Standard_B1s"
+        },
+        "gcp": {
+          "vm_type": "e2-micro"
+        }
+      }
+    }
+  },
+  "ssh_whitelist_ips": [
+    "0.0.0.0/32"
+  ],
+  "rpc_ws_whitelist_ips": [
+    "0.0.0.0/32"
+  ],
+  "path_to_ansible_public_key": "~/.ssh/ansible.pub",
+  "path_to_engineer_public_key": "~/.ssh/id_rsa.pub",
+  "use_aws_route53": "true",
+  "use_aws_route53_health_checks": "true",
+  "hosted_zone": "gnosis.protofire.io",
+  "hosted_zone_tag": "gnosis",
+  "generate_ansible_inventory": "true"
+}

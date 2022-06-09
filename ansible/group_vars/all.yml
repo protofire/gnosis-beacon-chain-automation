@@ -1,0 +1,37 @@
+---
+xdai_rpc_url: http://gc-node.gnosis.example.com:8545
+public_ip: "{{ ansible_host }}"
+# URL of the node to be used by the validators for communication
+node_url: http://gbc-node.gnosis.example.com:5052
+
+# Specify if you want a different value than the default one
+target_peers:
+graffitiwall:
+
+keystore_password: password
+validator_keys_dir: "{{ inventory_hostname }}"
+
+# Set to yes if you want the lighthouse update to take place.
+# NB: if graffitiwall is set, a forced lighthouse update will take place,
+# because if config/graffiti.yml is changed,
+# otherwise updates cannot be pulled up.
+# Also the services containers will be restarted.
+update_lighthouse: false
+
+# Set to true if you want the service to be deployed.
+node_slasher_enabled: false
+node_slasher_type: private
+
+# Metrics
+node_metrics_enabled: true
+# Specify if you want a different value than the default one
+node_metrics_address:
+node_metrics_allow_origin:
+
+validator_metrics_enabled: true
+validator_metrics_address:
+validator_metrics_allow_origin:
+
+# Installing dependencies for the Python script,
+# that collects metrics for Grafana
+python_script_grafana_dependencies: true

@@ -1,0 +1,9 @@
+---
+# handlers file for docker_compose
+- name: Restart Docker
+  become: true
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+    enabled: true
+  when: docker_package_state != 'absent'

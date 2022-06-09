@@ -1,0 +1,41 @@
+---
+- name: Install prerequisites
+  block:
+    - name: Install dependencies
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - git
+
+    - name: Install python dependencies for GBC Grafana monitoring
+      vars:
+        pip_version: >-
+          {{ 'python3-pip'
+          if ansible_distribution not in ['Amazon']
+          else 'python2-pip' }}
+        pip_executable: >-
+          {{ 'pip3'
+          if ansible_distribution not in ['Amazon']
+          else 'pip2' }}
+      block:
+        - name: Install monitoring dependencies
+          ansible.builtin.package:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - "{{ pip_version }}"
+            - cron
+
+        - name: Install GBC monitoring python modules
+          ansible.builtin.pip:
+            executable: "{{ pip_executable }}"
+            name: "{{ item }}"
+            extra_args: --user
+            state: present
+          loop:
+            - aiohttp
+            - beautifulsoup4
+      when:
+        - python_script_grafana_dependencies
+        - group_names|select('regex','gbc_nodes')

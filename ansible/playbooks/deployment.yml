@@ -1,0 +1,22 @@
+---
+- hosts:
+  - all
+  gather_facts: true
+  roles:
+    - role: docker_compose
+      tags: docker_and_compose
+
+- hosts:
+  - gc_nodes
+  gather_facts: true
+  roles:
+    - role: gc_node
+      tags: gc_node
+
+- hosts:
+  - gbc_nodes
+  - gbc_validators
+  gather_facts: true
+  roles:
+    - role: gbc_lighthouse
+      tags: gbc_lighthouse

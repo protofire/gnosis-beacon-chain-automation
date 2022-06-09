@@ -1,0 +1,17 @@
+---
+# defaults file for docker_compose
+docker_compose_path: "/usr/local/sbin/docker-compose"
+docker_compose_version: "latest"
+add_user_to_docker_group: true
+
+docker_package_state: "latest"
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+debian_docker_package_dependencies:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release

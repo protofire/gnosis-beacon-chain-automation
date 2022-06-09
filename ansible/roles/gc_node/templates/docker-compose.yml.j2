@@ -1,0 +1,58 @@
+version: '3.7'
+services:
+  nethermind:
+    init: true
+    container_name: xdai-validator
+    image: nethermind/nethermind:latest
+    environment:
+      NETHERMIND_CONFIG: xdai
+{% if gc_validator_enabled %}
+      NETHERMIND_AURACONFIG_FORCESEALING: "true"
+      NETHERMIND_AURACONFIG_TXPRIORITYCONTRACTADDRESS: "0x5f849Fee27a1029fA5bDFA610677f95a82B47Eb8"
+      NETHERMIND_ETHSTATSCONFIG_ENABLED: "true"
+      NETHERMIND_ETHSTATSCONFIG_SERVER: "wss://dai-netstat.poa.network/api"
+      NETHERMIND_ETHSTATSCONFIG_SECRET: "${ETHSTATS_SECRET}"
+      NETHERMIND_ETHSTATSCONFIG_CONTACT: "${ETHSTATS_CONTACT}"
+      NETHERMIND_ETHSTATSCONFIG_NAME: "${ETHSTATS_ID}"
+      NETHERMIND_KEYSTORECONFIG_TESTNODEKEY: $KEY
+      NETHERMIND_METRICSCONFIG_NODENAME: $ETHSTATS_ID
+      NETHERMIND_PRUNINGCONFIG_ENABLED: "true"
+      NETHERMIND_PRUNINGCONFIG_MODE: "Full"
+      NETHERMIND_SEQCONFIG_MINLEVEL: "Info"
+      NETHERMIND_SEQCONFIG_SERVERURL: "https://seq.nethermind.io"
+      NETHERMIND_SEQCONFIG_APIKEY: $SEQAPIKEY
+      NETHERMIND_INITCONFIG_ISMINING: "true"
+      NETHERMIND_MININGCONFIG_MINGASPRICE: "0"
+      NETHERMIND_MININGCONFIG_TARGETBLOCKGASLIMIT: "30000000"
+{% else %}
+      NETHERMIND_PRUNINGCONFIG_ENABLED: "false"
+{% endif %}
+      NETHERMIND_INITCONFIG_STORERECEIPTS: "false"
+      NETHERMIND_INITCONFIG_WEBSOCKETSENABLED: "true"
+      NETHERMIND_HEALTHCHECKSCONFIG_ENABLED: "true"
+      NETHERMIND_JSONRPCCONFIG_ENABLED: "true"
+      NETHERMIND_JSONRPCCONFIG_ENABLEDMODULES: "Web3,Eth,Net,Parity"
+      NETHERMIND_JSONRPCCONFIG_HOST: "{{ json_rpc_host }}"
+      NETHERMIND_JSONRPCCONFIG_PORT: {{ json_rpc_port }}
+      NETHERMIND_JSONRPCCONFIG_WEBSOCKETSPORT: {{ websocket_port }}
+      NETHERMIND_METRICSCONFIG_ENABLED: "true"
+      NETHERMIND_METRICSCONFIG_PUSHGATEWAYURL: https://metrics.nethermind.io/metrics/validators-Ifa0eigee0deigah8doo5aisaeNa8huichahk5baip2daitholaeh4xiey0iec1vai6Nahxae1aeregul5Diehae7aeThengei7X
+      NETHERMIND_METRICSCONFIG_INTERVALSECONDS: 30
+      NETHERMIND_SYNCCONFIG_FASTSYNC: "true"
+      NETHERMIND_SYNCCONFIG_FASTBLOCKS: "true"
+      NETHERMIND_SYNCCONFIG_DOWNLOADBODIESINFASTSYNC: "false"
+      NETHERMIND_SYNCCONFIG_DOWNLOADRECEIPTSINFASTSYNC: "false"
+    volumes:
+      - ./data/logs:/nethermind/logs
+      - ./data/keystore:/nethermind/keystore
+      - ./data/nethermind_db:/nethermind/nethermind_db
+    ports:
+      - "{{ json_rpc_port }}:{{ json_rpc_port }}"
+      - "30303:30303"
+      - "30303:30303/udp"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"

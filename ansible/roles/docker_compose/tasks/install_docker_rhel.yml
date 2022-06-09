@@ -1,0 +1,31 @@
+---
+- name: Install docker [RedHat-based]
+  vars:
+    distr: >-
+      {{ ansible_distribution | lower
+      if ansible_distribution not in ['RedHat'] else 'centos' }}
+  block:
+    - name: Import Docker GPG signing key [RedHat-based]
+      ansible.builtin.rpm_key:
+        key: "https://download.docker.com/linux/{{ distr }}/gpg"
+        state: present
+
+    - name: Add Docker repository [RedHat-based]
+      ansible.builtin.yum_repository:
+        name: docker
+        description: Docker repository
+        baseurl: >-
+          https://download.docker.com/linux/{{
+          distr
+          }}/$releasever/$basearch/stable
+        enabled: true
+        gpgcheck: true
+        gpgcakey: "https://download.docker.com/linux/{{ distr }}/gpg"
+        state: present
+
+    - name: Install Docker and it's dependencies [RedHat-based]
+      ansible.builtin.yum:
+        name: "{{ docker_packages }}"
+        state: "{{ docker_package_state }}"
+        update_cache: true
+      notify: Restart Docker

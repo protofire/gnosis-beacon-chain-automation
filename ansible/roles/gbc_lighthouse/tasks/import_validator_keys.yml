@@ -1,0 +1,49 @@
+---
+- name: Import validator keys
+  block:
+    - name: Get list of validator keys files
+      ansible.builtin.find:
+        paths: "{{ gbc_lighthouse_dir }}/keys/validator_keys"
+        patterns: "keystore*.json"
+      register: validator_keys
+
+    - name: Create list of validator keys
+      ansible.builtin.set_fact:
+        validators: >-
+          {{ validators | default([]) }} +
+          ['{{ item.path | basename }}']
+      no_log: true
+      loop: "{{ validator_keys.files }}"
+
+    - name: Get list of imported validator keys files
+      ansible.builtin.find:
+        paths: "{{ gbc_lighthouse_dir }}/validators"
+        patterns: "keystore*.json"
+        recurse: true
+      register: imported_validator_keys
+
+    - name: Create list of imported validator keys
+      ansible.builtin.set_fact:
+        imported_validators: >-
+          {{ imported_validators | default([]) }} +
+          ['{{ item.path | basename }}']
+      no_log: true
+      loop: "{{ imported_validator_keys.files }}"
+
+    - name: Check non-imported validator keys
+      ansible.builtin.debug:
+        msg: >
+          Number of validator keys: {{ validators | length }}\n
+          Number of imported validator keys: {{
+            validators | intersect(imported_validators |
+            default([])) | length }}
+      changed_when: >-
+        validators | length > validators |
+        intersect(imported_validators | default([])) | length
+  when:
+    - not group_names|select('regex','gbc_nodes')
+    - group_names|select('regex','gbc_validators')
+  notify: Import validator keys
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,5 @@
+---
+# defaults file for gbc_lighthouse
+gbc_lighthouse_dir: /data/gbc
+gbc_lighthouse_repo: https://github.com/gnosischain/lighthouse-launch
+gbc_lighthouse_repo_branch: master

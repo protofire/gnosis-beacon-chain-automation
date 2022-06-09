@@ -1,0 +1,5 @@
+---
+# handlers file for gc_nodes
+- name: Restart services
+  ansible.builtin.set_fact:
+    restart_services: true

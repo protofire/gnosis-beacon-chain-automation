@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  role_name: gbc_lighthouse
+  namespace: protofire
+  author: protofire
+  description: >
+    Ansible role that deploy Lighhouse client for Gnosis Beacon Chain (GBC)
+
+  license: GPLv3
+
+  min_ansible_version: 2.9
+
+  platforms:
+    - name: Ubuntu
+    - name: Debian
+    - name: CentOS
+    - name: Fedora
+    - name: Amazon Linux 2
+
+  galaxy_tags:
+    - gbclighthouse
+
+dependencies: []

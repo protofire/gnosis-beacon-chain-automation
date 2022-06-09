@@ -1,0 +1,10 @@
+---
+json_rpc_port: 8545
+json_rpc_host: 0.0.0.0
+websocket_port: 8545
+gc_validator_enabled: false
+ethstats_id:
+ethstats_contact:
+ethstats_secret:
+ethstats_key:
+seqapikey:

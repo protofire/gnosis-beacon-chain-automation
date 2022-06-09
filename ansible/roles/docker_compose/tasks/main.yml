@@ -1,0 +1,38 @@
+---
+# tasks file for docker_compose
+- name: Install Docker
+  become: true
+  block:
+    - name: Install Docker [RedHat-based]
+      include_tasks: install_docker_rhel.yml
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution != "Amazon"
+
+    - name: Install Docker [Debian-based]
+      include_tasks: install_docker_debian.yml
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker [Amazon]
+      include_tasks: install_docker_amazon.yml
+      when: ansible_distribution == "Amazon"
+
+    - name: Add user to docker group
+      include_tasks: add_user_to_docker_group.yml
+      when: add_user_to_docker_group
+  tags:
+    - docker
+
+- name: Install Docker-compose
+  become: true
+  block:
+    - include_tasks: install_docker_compose.yml
+  tags:
+    - docker_compose
+
+- name: Install Python packages
+  become: true
+  block:
+    - include_tasks: install_python_deps.yml
+  tags:
+    - docker_python

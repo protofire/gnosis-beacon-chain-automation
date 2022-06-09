@@ -1,0 +1,34 @@
+---
+- name: Create a directory for GC Node
+  ansible.builtin.file:
+    path: "{{ gc_node_dir }}"
+    state: directory
+    mode: 0644
+
+- name: Copy configs
+  block:
+    - name: Copy GC Node (Nethermind) docker-compose.yml
+      ansible.builtin.template:
+        src: docker-compose.yml.j2
+        dest: "{{ gc_node_dir }}/docker-compose.yml"
+        mode: 0644
+
+    - name: Copy GC Node (Nethermind) .env
+      ansible.builtin.template:
+        src: env.j2
+        dest: "{{ gc_node_dir }}/.env"
+        mode: 0644
+      when: gc_validator_enabled
+  notify: Restart services
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Run GC Node
+  vars:
+    restart_service: >-
+      {{ 'true' if restart_services|default(false) else 'false' }}
+  docker_compose:
+    project_src: "{{ gc_node_dir }}"
+    restarted: "{{ restart_service }}"
+    state: present

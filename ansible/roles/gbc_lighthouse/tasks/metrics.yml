@@ -1,0 +1,70 @@
+---
+- name: Set metrics state
+  block:
+    - name: Set Node metrics state
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: 'lighthouse beacon_node'
+        before: 'lighthouse validator_client'
+        regexp: '^{{ item.regexp }}(\s*--metrics.*)'
+        replace: '{{ item.replace }}\g<1>'
+      no_log: true
+      loop:
+        - regexp: "{{ '#' if node_metrics_enabled else ''}}"
+          replace: "{{ '' if node_metrics_enabled else '#'}}"
+
+    - name: Set validator metrics state
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: 'lighthouse validator_client'
+        before: 'volumes:'
+        regexp: '^{{ item.regexp }}(\s*--metrics.*)'
+        replace: '{{ item.replace }}\g<1>'
+      no_log: true
+      loop:
+        - regexp: "{{ '#' if validator_metrics_enabled else ''}}"
+          replace: "{{ '' if validator_metrics_enabled else '#'}}"
+
+- name: Configure Node metrics params
+  block:
+    - name: Set metrics-address for Node
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: 'lighthouse beacon_node'
+        before: 'lighthouse validator_client'
+        regexp: '(\s*--metrics-address ).*'
+        replace: '\g<1>{{ node_metrics_address
+          if node_metrics_address
+          else "0.0.0.0" }}'
+
+    - name: Set metrics-allow-origin for Node
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: 'lighthouse beacon_node'
+        before: 'lighthouse validator_client'
+        regexp: '(\s*--metrics-allow-origin ).*'
+        replace: '\g<1>{{ node_metrics_allow_origin
+          if node_metrics_allow_origin
+          else "*" }}'
+
+- name: Configure Validator metrics params
+  block:
+    - name: Set metrics-address for Validator
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: 'lighthouse validator_client'
+        before: 'volumes:'
+        regexp: '(\s*--metrics-address ).*'
+        replace: '\g<1>{{ validator_metrics_address
+          if validator_metrics_address
+          else "0.0.0.0" }}'
+
+    - name: Set metrics-allow-origin for Validator
+      ansible.builtin.replace:
+        path: "{{ gbc_lighthouse_dir }}/docker-compose.yml"
+        after: 'lighthouse validator_client'
+        before: 'volumes:'
+        regexp: '(\s*--metrics-allow-origin ).*'
+        replace: '\g<1>{{ validator_metrics_allow_origin
+          if validator_metrics_allow_origin
+          else "*" }}'

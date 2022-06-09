@@ -1,0 +1,41 @@
+---
+# tasks file for gbc_lighthouse
+- name: Setup GBC Lighthouse client
+  become: true
+  block:
+    - name: Create validator_keys directory
+      become: false
+      ansible.builtin.file:
+        path: "{{ inventory_dir }}/validator_keys/{{ validator_keys_dir }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      when: group_names|select('regex','gbc_validators')
+      tags: preparation
+
+    - name: Install prerequisites
+      import_tasks: prerequisites.yml
+      tags: prerequisites
+
+    - name: Keystore collision detection
+      import_tasks: key_collision_detection.yml
+      tags: key_collision_detection
+
+    - name: GBC Lighthouse deploy
+      import_tasks: gbc_lighthouse.yml
+      tags: gbc_lighthouse_deploy
+
+    - name: Enable metrics
+      import_tasks: metrics.yml
+      tags: gbc_lighthouse_metrics
+
+    - name: Import validator keys
+      import_tasks: import_validator_keys.yml
+      tags: import_validator_keys
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+    - name: Run services
+      import_tasks: run_services.yml
+      tags: run_services

@@ -1,0 +1,26 @@
+---
+- name: Install Ansible dependencies for docker_compose
+  vars:
+    pip_version: >-
+      {{ 'python3-pip'
+      if ansible_distribution not in ['Amazon']
+      else 'python2-pip' }}
+    pip_executable: >-
+      {{ 'pip3'
+      if ansible_distribution not in ['Amazon']
+      else 'pip2' }}
+  block:
+    - name: Install Python Pip
+      ansible.builtin.package:
+        name: "{{ pip_version }}"
+        state: present
+
+    - name: Install docker_compose Python packages
+      ansible.builtin.pip:
+        executable: "{{ pip_executable }}"
+        name: "{{ item }}"
+        extra_args: --user
+        state: present
+      loop:
+        - docker
+        - docker-compose
