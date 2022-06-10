@@ -3,3 +3,4 @@
 gc_node_dir: /data/gc
 gc_node_repo: https://github.com/xdaichain/validator-node-dockerized
 gc_node_repo_branch: nethermind
+gc_version: 1.13.0
