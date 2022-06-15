@@ -6,7 +6,7 @@
     - name: Create validator_keys directory
       become: false
       ansible.builtin.file:
-        path: "{{ inventory_dir }}/validator_keys/{{ validator_keys_dir }}"
+        path: "{{ playbook_dir }}/../validator_keys/{{ validator_keys_dir }}"
         state: directory
         mode: '0755'
       delegate_to: localhost

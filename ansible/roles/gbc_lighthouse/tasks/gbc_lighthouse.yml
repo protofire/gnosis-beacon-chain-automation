@@ -17,7 +17,7 @@
 
     - name: Copy validator keys (Validator)
       ansible.builtin.copy:
-        src: "{{ inventory_dir }}/validator_keys/{{ validator_keys_dir }}/"
+        src: "{{ playbook_dir }}/../validator_keys/{{ validator_keys_dir }}/"
         dest: "{{ gbc_lighthouse_dir }}/keys/validator_keys"
         decrypt: true
         mode: 0755
@@ -28,7 +28,7 @@
         - name: Get lisf of all keys
           become: false
           ansible.builtin.find:
-            paths: "{{ inventory_dir }}/validator_keys/"
+            paths: "{{ playbook_dir }}/../validator_keys/"
             patterns: "keystore*.json"
             recurse: true
           no_log: true

@@ -7,6 +7,7 @@ Infrastructure parts to be deployed:
 - Gnosis Beacon Chain nodes (GBC nodes)
 - Gnosis Beacon Chain validators (GBC validators)
 
+## TOC:
 - [How to use](#how-to-use)
 - [Configuration options](#configuration-options)
 

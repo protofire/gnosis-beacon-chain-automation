@@ -13,37 +13,39 @@ https://github.com/gnosischain/lighthouse-launch
 1. (Optional) Secure your data using Ansible Vault to encrypt your `keystore_password`:
    1. Create a plain-text file named `vpass` outside this working directory.
    2. Store an Ansible Vault password in this file.
-   3. Define an absolute path to this file in `vault_password_file` variable of [playbooks/ansible.cfg](playbooks/ansible.cfg) file.
+   3. Define a path to this file in `vault_password_file` variable of [ansible.cfg](ansible.cfg) file.
 
-2. By default, the inventory file `production.yml` is generated during the infrastructure deployment phase (Terraform). (see [`generate_ansible_inventory`](../terraform/README.md#generate_ansible_inventory))
+2. By default, the inventory file `inventories/hosts.yml` is generated during the infrastructure deployment phase (Terraform). (see [`generate_ansible_inventory`](../terraform/README.md#generate_ansible_inventory))
    <blockquote><details>
    <summary><b>NOTE:</b> If you want to fill in the inventory file manually</summary>
-   Fill in the `production.yml` inventory file. Note the following:
+   Fill in the `inventories/hosts.yml` inventory file. Note the following:
    <ul>
    <li>`ansible_host` values must match IP addresses from `terraform apply` command output.</li>
    <li>`ansible_user` value must always be `protoadmin`. This user is created for all instances during deployment for consistency.</li>
    <li>`ansible_ssh_private_key_file` value must match `path_to_ansible_public_key` parameter of deployment configuration.</li>
    </ul>
    </details></blockquote>
+
+   > **NOTE:** In case you want to deploy GBC Validators on additional instances (e.g. bare metal), you should fill in the `inventories/other.yml` file for this purpose.
 3. Configure options in [group_vars/all.yml](group_vars/all.yml) and [group_vars/gc_nodes.yml](group_vars/gc_nodes.yml) (see [specification](#configuration-options))
 4. Create directories for keystores in `validator_keys` directory using the following command:
      ```bash
-     ansible-playbook ./playbooks/deployment.yml -i production.yml --tags preparation
+     ansible-playbook ./playbooks/deployment.yml -i inventories --tags preparation
      ```
 
-     > **NOTE:** Created directories will be named after `hosts` in [production.yml](production.yml). Each host from inventory will have its own corresponding directory.
+     > **NOTE:** Created directories will be named after `hosts` in [inventories/hosts.yml](inventories/hosts.yml) (and `inventories/other.yml` if used). Each host from inventory will have its own corresponding directory.
 5. Store your GBC `keystore*.json` files in corresponding directories.
 6. Test connection to each instance using the following command:
    ```bash
-   ansible -m ping -i production.yml all
+   ansible -m ping -i inventories all
    ```
 7. Validate changes that are about to be applyied using the following command:
    ```bash
-   ansible-playbook ./playbooks/deployment.yml -i production.yml --check --diff
+   ansible-playbook ./playbooks/deployment.yml -i inventories --check --diff
    ```
 8. Deploy the application using the following command:
    ```bash
-   ansible-playbook ./playbooks/deployment.yml -i production.yml
+   ansible-playbook ./playbooks/deployment.yml -i inventories
    ```
 
 ## Configuration options

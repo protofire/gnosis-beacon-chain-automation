@@ -6,7 +6,7 @@
   block:
     - name: Get list of all validator keys files
       ansible.builtin.find:
-        paths: "{{ inventory_dir }}/validator_keys"
+        paths: "{{ playbook_dir }}/../validator_keys"
         patterns: "keystore*.json"
         recurse: true
       no_log: true

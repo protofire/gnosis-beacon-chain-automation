@@ -31,7 +31,7 @@ resource "local_file" "ansible_inventory" {
         var.path_to_ansible_public_key, ".pub", "")
     }
   )
-  filename = "../ansible/production.yml"
+  filename = "../ansible/inventories/hosts.yml"
   file_permission = "0644"
 }
 

@@ -52,6 +52,8 @@ In order to deploy the GBC Validators you will need to:
 3. Deploy the application on the created infrastructure using Ansible 
 ([instruction](ansible))
 
+> **_NOTE:_** In case you want to deploy the GBC Validators on other instances (e.g., bare metal) that are not deployed using Terraform, then you can skip step number 2.
+
 ## Prerequisites
 
 - Cloud provider account(s):
